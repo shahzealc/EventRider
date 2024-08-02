@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background-color: #5c6ac4;
+            color: white;
+            width: 100%;
+            padding: 1em 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2em;
+            width: 100%;
+        }
+
+        .events-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2em;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .event-card {
+            background: white;
+            padding: 1.5em;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+            .event-card:hover {
+                transform: translateY(-5px);
+            }
+
+            .event-card h2 {
+                margin: 0 0 0.5em;
+                color: #333;
+            }
+
+            .event-card p {
+                margin: 0.5em 0;
+                color: #666;
+            }
+
+            .event-card .event-city,
+            .event-card .event-type,
+            .event-card .event-fees,
+            .event-card .event-date,
+            .event-card .event-time {
+                font-weight: bold;
+            }
+
+        .add-event-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: #5c6ac4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+            .add-event-button:hover {
+                background-color: #3e4a9b;
+            }
+
+        .filter-container {
+            display: flex;
+            gap: 1em;
+            margin-bottom: 2em;
+        }
+
+            .filter-container input,
+            .filter-container select {
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+                .filter-container input:focus,
+                .filter-container select:focus {
+                    border-color: #5c6ac4;
+                }
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Upcoming Events</h1>
+        <h4><a href="UserEvent.html">Your Events</a></h4>
+    </header>
+    <main>
+        <div class="filter-container">
+            <input type="text" id="searchField" placeholder="Search by name" oninput="searchByName()" />
+            <select id="typeDropdown" onchange="filterByType()">
+                <option value="">Select Type</option>
+                <option value="Business">Business</option>
+                <option value="Music">Music</option>
+                <option value="Parties">Parties</option>
+                <option value="Festival">Festival</option>
+                <option value="Art">Art</option>
+                <option value="Dance">Dance</option>
+                <option value="Health">Health</option>
+                <option value="Workshop">Workshop</option>
+                <option value="Performance">Performance</option>
+                <option value="Theatre">Theatre</option>
+                <option value="Sports">Sports</option>
+                <option value="Technology">Technology</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="events-container" id="eventsContainer">
+        </div>
+    </main>
+
+    <script>
+        const token = localStorage.getItem('jwtToken');
+
+        function fetchEvents(url) {
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            })
+                .then(response => {
+                    if (response.status === 401) {
+                        alert("Unauthorized!!");
+                        window.location.href = 'Login.html';
+                        return;
+                    }
+                    else if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    displayEvents(data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert(`Event Fetch failed: ${error.message}`);
+                });
+        }
+
+
+        function displayEvents(events) {
+            const eventsContainer = document.getElementById('eventsContainer');
+            eventsContainer.innerHTML = '';
+            events.forEach(event => {
+                const card = createEventCard(event);
+                eventsContainer.appendChild(card);
+            });
+        }
+
+        function createEventCard(event) {
+            const card = document.createElement('div');
+            card.classList.add('event-card');
+
+            const name = document.createElement('h2');
+            name.textContent = event.name;
+            card.appendChild(name);
+
+            const city = document.createElement('p');
+            city.classList.add('event-city');
+            city.textContent = `City: ${event.location}`;
+            card.appendChild(city);
+
+            const type = document.createElement('p');
+            type.classList.add('event-type');
+            type.textContent = `Type: ${event.type}`;
+            card.appendChild(type);
+
+            const description = document.createElement('p');
+            description.classList.add('event-description');
+            description.textContent = event.description;
+            card.appendChild(description);
+
+            const fees = document.createElement('p');
+            fees.classList.add('event-fees');
+            fees.textContent = `Fees: ₹${event.fees}`;
+            card.appendChild(fees);
+
+            const date = document.createElement('p');
+            date.classList.add('event-date');
+            date.textContent = `Date: ${event.date}`;
+            card.appendChild(date);
+
+            const time = document.createElement('p');
+            time.classList.add('event-time');
+            time.textContent = `Time: ${event.time}`;
+            card.appendChild(time);
+
+            return card;
+        }
+
+
+        function searchByName() {
+            const searchField = document.getElementById('searchField').value;
+            const url = `http://192.168.1.83:8080/events?search=${searchField}`;
+            fetchEvents(url);
+        }
+
+        function filterByType() {
+            const typeDropdown = document.getElementById('typeDropdown').value;
+            const url = `http://192.168.1.83:8080/events?type=${typeDropdown}`;
+            fetchEvents(url);
+        }
+
+        fetchEvents('http://192.168.1.83:8080/events');
+
+    </script>
+
+</body>
+
+</html>
