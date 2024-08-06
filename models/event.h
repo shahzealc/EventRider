@@ -44,6 +44,7 @@ public:
 	crow::json::wvalue GetEventsByQuery(sqlite3* db,std::string query);
 	crow::json::wvalue GetEvents(sqlite3* db,std::string field="*");
 	bool DeleteEvent(sqlite3* db);
+	bool UpdateEvent(sqlite3* db);
 
 };
 

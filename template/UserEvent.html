@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events</title>
+
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -106,7 +107,24 @@
             .delete-button:hover {
                 background-color: #c9302c;
             }
+
+            .update-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #cfb523;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-left: 10px;
+        }
+
+            .update-button:hover {
+                background-color: #cfb523;
+            }
     </style>
+
 </head>
 
 <body>
@@ -208,6 +226,12 @@
             deleteButton.onclick = () => deleteEvent(event.eventid);
             card.appendChild(deleteButton);
 
+            const updateButton = document.createElement('button');
+            updateButton.textContent = 'Update';
+            updateButton.classList.add('update-button');
+            updateButton.onclick = () => updateEvent(event);
+            card.appendChild(updateButton);
+
             return card;
         }
 
@@ -242,10 +266,18 @@
                 })
                 .catch((error) => {
                     console.error('Error:', error);
-                    alert(`Event deletion failed: ${error.message}`);
+                    /*alert(`Event deletion failed: ${error.message}`);*/
                 });
         }
 
+        function updateEvent(eventData) {
+
+            console.log(eventData);
+
+            localStorage.setItem('UpdateData', JSON.stringify(eventData));
+
+            window.location.href = `UpdateEvent.html`;
+        }
 
     </script>
 

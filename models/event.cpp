@@ -51,28 +51,29 @@ crow::json::wvalue Event::GetEventsByQuery(sqlite3* db,std::string query)
 crow::json::wvalue Event::GetEvents(sqlite3* db, std::string field)
 {
 	if (field == "location") {
-		std::string query = "SELECT * FROM Event WHERE LOWER(location) like LOWER('%" + location + "%') order by date, time;";
+		std::string query = "SELECT * FROM Event WHERE LOWER(location) like LOWER('%" + location + "%') AND date >= date('now') order by date, time;";
 		return GetEventsByQuery(db, query);
 	}
 	else if (field == "type") {
-		std::string query = "SELECT * FROM Event WHERE LOWER(type) like LOWER('%" + type + "%') order by date, time;";
+		std::string query = "SELECT * FROM Event WHERE LOWER(type) like LOWER('%" + type + "%') AND date >= date('now') order by date, time;";
 		return GetEventsByQuery(db, query);
 	}
 	else if (field == "name") {
-		std::string query = "SELECT * FROM Event WHERE LOWER(name) like LOWER('%" + name + "%') order by date, time;";
+		std::string query = "SELECT * FROM Event WHERE LOWER(name) like LOWER('%" + name + "%') AND date >= date('now') order by date, time;";
 		return GetEventsByQuery(db, query);
 	}
 	else if (field == "creator") {
-		std::string query = "SELECT * FROM Event WHERE LOWER(creator_id) like LOWER('%" + creator_id + "%') order by date, time;";
+		std::string query = "SELECT * FROM Event WHERE LOWER(creator_id) like LOWER('%" + creator_id + "%') AND date >= date('now') order by date, time;";
 		return GetEventsByQuery(db, query);
 	}
 	else if (field == "search") {
-		std::string query = "SELECT * FROM Event WHERE LOWER(location) like LOWER('%" + name + "%') or LOWER(type) like LOWER('%" + name + "%') or LOWER(name) like LOWER('%" + name + "%') or LOWER(description) like LOWER('%" + name + "%') order by date, time;";
+		std::string query = "SELECT * FROM Event WHERE (LOWER(location) like LOWER('%" + name + "%') or LOWER(type) like LOWER('%" + name + "%') or LOWER(name) like LOWER('%" + name + "%') or LOWER(description) like LOWER('%" + name + "%')) AND date >= date('now') order by date, time;";
 		CROW_LOG_INFO<<query;
 		return GetEventsByQuery(db, query);
 	}
 	else {
-		std::string query = "SELECT * FROM Event order by date, time;";
+		std::string query = "SELECT * FROM Event WHERE date >= date('now') ORDER BY date, time;";
+		CROW_LOG_INFO<<query;
 		return GetEventsByQuery(db, query);
 	}
 	return crow::json::wvalue();
@@ -83,6 +84,26 @@ bool Event::DeleteEvent(sqlite3* db) {
 
 	if (!Database::executeQuery(&db, query)) {
 		CROW_LOG_WARNING << "Failed to Delete user: " << Database::SQLiteError;
+		return false;
+	}
+	return true;
+}
+
+bool Event::UpdateEvent(sqlite3* db)
+{
+	std::string query = "UPDATE Event SET "
+		"name = '" + name + "', "
+		"location = '" + location + "', "
+		"type = '" + type + "', "
+		"fees = " + std::to_string(fees) + ", "
+		"date = '" + date + "', "
+		"time = '" + time + "', "
+		"description = '" + description + "' "
+		"WHERE id = " + id + ";";
+	CROW_LOG_WARNING<<query;
+
+	if (!Database::executeQuery(&db, query)) {
+		CROW_LOG_WARNING << "Failed to Update user: " << Database::SQLiteError;
 		return false;
 	}
 	return true;

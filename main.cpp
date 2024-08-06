@@ -68,10 +68,10 @@ int main() {
 	crow::App<crow::CORSHandler, crow::CookieParser, VerifyJWT> app;
 
 	auto& cors = app.get_middleware<crow::CORSHandler>();
-	cors.global().origin("http://127.0.0.1:5500");
+	cors.global().origin("*");
 	cors.global().allow_credentials();
 	cors.global().headers("Content-Type", "Authorization");
-	cors.global().methods("GET"_method, "POST"_method, "DELETE"_method, "PATCH"_method, "OPTIONS"_method);
+	cors.global().methods("GET"_method, "POST"_method, "DELETE"_method, "PATCH"_method, "PUT"_method, "OPTIONS"_method);
 
 
 	sqlite3* db = nullptr;
@@ -237,6 +237,41 @@ int main() {
 		return crow::response(400);
 
 		});
+
+	CROW_ROUTE(app, "/events").methods(crow::HTTPMethod::Put)([db](const crow::request& request) {
+		auto body = crow::json::load(request.body);
+		if (!body) {
+			return crow::response(400, "Invalid JSON");
+		}
+
+		try {
+			Event E1;
+			E1.setId(body["eventid"].s());
+			E1.setName(body["name"].s());
+			E1.setLocation(body["city"].s());
+			E1.setType(body["type"].s());
+			E1.setDescription(body["description"].s());
+			E1.setFees(std::stod(body["fees"].s()));
+			E1.setDate(body["date"].s());
+			E1.setTime(body["time"].s());
+
+			crow::json::wvalue res;
+
+			if (E1.UpdateEvent(db)) {
+				res["message"] = "Updated Successfully";
+				return crow::response(200, res);
+			}
+			else {
+				res["message"] = "Something Went Wrong";
+				return crow::response(400, res);
+			}
+		}
+		catch (const std::exception& e) {
+			CROW_LOG_ERROR << "Exception: " << e.what();
+			return crow::response(500, "Server error");
+		}
+		});
+
 
 	CROW_ROUTE(app, "/checktoken")([]() {
 

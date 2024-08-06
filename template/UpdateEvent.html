@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Event</title>
+    <title>Update Event</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -75,8 +75,8 @@
 </head>
 <body>
     <div class="form-container">
-        <h2>Add an Event</h2>
-        <form id="addevent">
+        <h2>Update an Event</h2>
+        <form id="updateevent">
             <div class="form-group">
                 <label for="name">Name:</label>
                 <input type="text" id="name" name="name" required>
@@ -126,14 +126,24 @@
                 <input type="text" id="description" name="description" required>
             </div>
             <div class="form-group">
-                <button type="submit">Add</button>
+                <button type="submit">Update</button>
             </div>
         </form>
     </div>
     <script>
-        document.getElementById('addevent').addEventListener('submit', function (event) {
-            event.preventDefault();
+        const eventData = JSON.parse(localStorage.getItem('UpdateData'));
 
+
+        document.getElementById("name").value = eventData.name;
+        document.getElementById("city").value = eventData.location;
+        document.getElementById("type").value = eventData.type;
+        document.getElementById("fees").value = eventData.fees;
+        document.getElementById("date").value = eventData.date; 
+        document.getElementById("time").value = eventData.time;
+        document.getElementById("description").value = eventData.description;
+
+        document.getElementById('updateevent').addEventListener('submit', function (event) {
+            event.preventDefault();
             const formData = new FormData(event.target);
             const data = {};
 
@@ -141,13 +151,18 @@
                 data[key] = value;
             });
 
+            console.log(eventData);
+            data["eventid"] = eventData.eventid.toString();
+
             const token = localStorage.getItem('jwtToken');
 
-            fetch('http://192.168.1.83:8080/addevent', {
-                method: 'POST',
+            console.log(data);
+
+            fetch(`http://192.168.1.83:8080/events`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(data)
             })
@@ -161,16 +176,16 @@
                             throw new Error(data.message);
                         });
                     }
-                    window.location.href = 'Events.html';
                     return response.json();
                 })
                 .then(data => {
-                    alert("Event Added Succesfully");
+                    alert("Event Updated Successfully");
+                    localStorage.removeItem('UpdateData');
                     window.location.href = 'Events.html';
                 })
                 .catch((error) => {
                     console.error('Error:', error);
-                    /*alert(`Event deletion failed: ${error.message}`);*/
+                    localStorage.removeItem('UpdateData');
                 });
         });
     </script>

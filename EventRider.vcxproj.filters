@@ -72,5 +72,6 @@
     <None Include="template\Register.html" />
     <None Include="template\Events.html" />
     <None Include="template\UserEvent.html" />
+    <None Include="template\UpdateEvent.html" />
   </ItemGroup>
 </Project>

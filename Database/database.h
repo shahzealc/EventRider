@@ -72,7 +72,6 @@ namespace Database {
 		char* errMsg = nullptr;
 
 		int rc = sqlite3_exec(*db, query.c_str(), NULL, 0, &errMsg);
-		CROW_LOG_INFO << rc;
 
 		if (rc != SQLITE_OK) {
 			SQLiteError = { errMsg };
