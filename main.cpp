@@ -1,6 +1,7 @@
 #include <iostream>
 #include "models/user.h"
 #include "models/event.h"
+#include "models/purchasedevent.h"
 #include "jwt-cpp/jwt.h"
 #include "crow_all.h"
 #include "Database/database.h"
@@ -106,7 +107,7 @@ int main() {
 
 			std::string message = U1.validateUser(db);
 
-			if (message=="true") {
+			if (message == "true") {
 				auto token = jwt::create()
 					.set_issuer("auth0")
 					.set_type("JWS")
@@ -145,7 +146,7 @@ int main() {
 
 			if (U1.insertUser(db)) {
 				res["message"] = "Inserted Successfully";
-				return crow::response(200, res);
+				return crow::response(201, res);
 			}
 			else {
 				res["message"] = "Failed to insert user: " + Database::SQLiteError;
@@ -157,6 +158,32 @@ int main() {
 			res["message"] = std::string("Error processing request: ") + e.what();
 			return crow::response(400, res);
 		}
+		});
+
+	CROW_ROUTE(app, "/user").methods(crow::HTTPMethod::Get)([db](const crow::request& request) {
+
+		if (request.url_params.get("id") != nullptr) {
+			auto id = request.url_params.get("id");
+
+			User u1;
+			u1.setId(id);
+			std::string message = u1.GetUser(db);
+
+			crow::json::wvalue res;
+			res["message"] = message;
+			if (message == "Success") {
+				res["name"] = u1.getName();
+				res["email"] = u1.getEmail();
+				return crow::response(200, res);
+			}
+			else {
+				return crow::response(400, res);
+			}
+
+		}
+
+		return crow::response(400, "Missing parameter");
+
 		});
 
 	CROW_ROUTE(app, "/addevent").methods(crow::HTTPMethod::Post)([db](const crow::request& req) {
@@ -187,7 +214,7 @@ int main() {
 		E1.setImage(fileName);
 
 		if (E1.insertEvent(db)) {
-			return crow::response(200, "Event added successfully");
+			return crow::response(201, "Event added successfully");
 		}
 		else {
 			return crow::response(400, "Failed to add event");
@@ -296,6 +323,57 @@ int main() {
 			CROW_LOG_ERROR << "Exception: " << e.what();
 			return crow::response(500, "Server error");
 		}
+		});
+
+	CROW_ROUTE(app, "/bookevent").methods(crow::HTTPMethod::Post)([db](const crow::request& request) {
+
+		auto body = crow::json::load(request.body);
+		CROW_LOG_WARNING << body;
+
+		Event e1;
+		e1.setId(std::to_string(body["eventid"].i()));
+
+		crow::json::wvalue res;
+
+		if (e1.CheckAvailablityAndInsert(db, body["seats"].i())) {
+
+			PurchasedEvent pe1;
+			pe1.setEventId(std::to_string(body["eventid"].i()));
+			pe1.setUserId(body["userid"].s());
+			pe1.setSeats(body["seats"].i());
+
+			if (pe1.AddPurchasedEvent(db)) {
+				res["message"] = "Event Booked Successfully";
+				return crow::response(200, res);
+			}
+			else {
+				res["message"] = "Something went wrong";
+				return crow::response(501, res);
+			}
+		}
+		else {
+			res["message"] = "Sorry, the seats are full";
+			return crow::response(200, res);
+		}
+
+
+		});
+
+	CROW_ROUTE(app, "/alreadybooked").methods(crow::HTTPMethod::Get)([db](const crow::request& request) {
+
+		PurchasedEvent pe1;
+		pe1.setEventId(request.url_params.get("eventid"));
+		pe1.setUserId(request.url_params.get("userid"));
+		crow::json::wvalue res;
+
+		if (pe1.checkUserWithEvent(db)) {
+			res["booked"] = true;
+		}
+		else {
+			res["booked"] = false;
+		}
+		return crow::response(200, res);
+
 		});
 
 	CROW_ROUTE(app, "/checktoken")([]() {

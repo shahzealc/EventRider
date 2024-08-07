@@ -72,7 +72,7 @@ crow::json::wvalue Event::GetEvents(sqlite3* db, std::string field)
 	}
 	else if (field == "creator") {
 		std::string query = "SELECT * FROM Event WHERE LOWER(creator_id) like LOWER('%" + creator_id + "%') AND date >= date('now') order by date, time;";
-		CROW_LOG_INFO<<query;
+		CROW_LOG_INFO << query;
 		return GetEventsByQuery(db, query);
 	}
 	else if (field == "search") {
@@ -114,11 +114,48 @@ bool Event::UpdateEvent(sqlite3* db)
 	CROW_LOG_WARNING << query;
 
 	if (!Database::executeQuery(&db, query)) {
-		CROW_LOG_WARNING << "Failed to Update user: " << Database::SQLiteError;
+		CROW_LOG_WARNING << "Failed to Update event: " << Database::SQLiteError;
 		return false;
 	}
 	return true;
 }
+
+bool Event::CheckAvailablity(sqlite3* db, int seats)
+{
+	std::string query = "SELECT max_seat,enrolled_count FROM EVENT WHERE id =" + id + ";";
+	sqlite3_stmt* stmt;
+
+	if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		return false;
+	}
+
+	int step = sqlite3_step(stmt);
+	if (step == SQLITE_ROW) {
+		max_seat = sqlite3_column_int(stmt, 0);
+		enrolled_count = sqlite3_column_int(stmt, 1);
+		if ((max_seat - enrolled_count) >= seats) {
+			return true;
+		}
+	}
+
+	sqlite3_finalize(stmt);
+	return false;
+}
+
+bool Event::CheckAvailablityAndInsert(sqlite3* db, int seats)
+{
+	if (CheckAvailablity(db, seats)) {
+		std::string query = "UPDATE Event SET enrolled_count = enrolled_count + " + std::to_string(seats) + " WHERE id = " + id + ";";
+		if (!Database::executeQuery(&db, query)) {
+			CROW_LOG_WARNING << "Failed to Update event: " << Database::SQLiteError;
+			return false;
+		}
+		return true;
+	}
+	return false;
+}
+
 
 
 

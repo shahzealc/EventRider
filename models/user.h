@@ -39,6 +39,8 @@ public:
 
 	std::string validateUser(sqlite3* db);
 
+	std::string GetUser(sqlite3* db);
+
 };
 
 #endif

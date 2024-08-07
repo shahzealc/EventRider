@@ -57,6 +57,8 @@ public:
 	crow::json::wvalue GetEvents(sqlite3* db,std::string field="*");
 	bool DeleteEvent(sqlite3* db);
 	bool UpdateEvent(sqlite3* db);
+	bool CheckAvailablity(sqlite3* db,int seats);
+	bool CheckAvailablityAndInsert(sqlite3* db,int seats);
 
 };
 

@@ -40,3 +40,27 @@ std::string User::validateUser(sqlite3* db) {
 	return "Password is wrong";
 
 }
+
+std::string User::GetUser(sqlite3* db) {
+	std::string query = "SELECT name,email FROM USER WHERE id = " + id + ";";
+			
+	sqlite3_stmt* stmt;
+
+	if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		return "Something went wrong";
+	}
+
+	int step = sqlite3_step(stmt);
+	if (step == SQLITE_ROW) {
+		name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+		email = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+		return "Success";
+	}
+	if (step == SQLITE_DONE) {
+		return "User not found";
+	}
+	sqlite3_finalize(stmt);
+
+	return "failure";
+}

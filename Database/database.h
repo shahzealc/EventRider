@@ -65,6 +65,7 @@ namespace Database {
 			"id INTEGER PRIMARY KEY AUTOINCREMENT,"
 			"event_id INTEGER,"
 			"user_id INTEGER,"
+			"seats INTEGER,"
 			"FOREIGN KEY(user_id) REFERENCES User(id),"
 			"FOREIGN KEY(event_id) REFERENCES Event(id));";
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,12 +16,12 @@
 
         .container {
             width: 90%;
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 40px auto;
             padding: 20px;
             background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         .header {
@@ -32,13 +33,14 @@
                 width: 100%;
                 max-width: 800px;
                 height: auto;
-                border-radius: 8px;
+                border-radius: 12px;
             }
 
         .content {
             display: flex;
             justify-content: space-between;
             margin-top: 20px;
+            gap: 20px;
         }
 
         .main-content {
@@ -54,7 +56,7 @@
         }
 
             .event-details h1 {
-                font-size: 28px;
+                font-size: 32px;
                 color: #007bff;
                 margin-bottom: 10px;
             }
@@ -65,7 +67,7 @@
             }
 
         .event-description h2 {
-            font-size: 22px;
+            font-size: 24px;
             color: #28a745;
             margin-bottom: 10px;
         }
@@ -102,8 +104,57 @@
                 width: 100%;
                 height: 100%;
             }
+
+        .book-button {
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            margin-top: 20px;
+        }
+
+            .book-button:hover {
+                background-color: #0056b3;
+            }
+
+            .book-button:disabled {
+                background-color: #6c757d;
+                cursor: not-allowed;
+            }
+
+        .seat-selector {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+            .seat-selector button {
+                padding: 10px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 18px;
+            }
+
+                .seat-selector button:disabled {
+                    background-color: #6c757d;
+                }
+
+            .seat-selector span {
+                margin: 0 10px;
+                font-size: 18px;
+            }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -120,11 +171,22 @@
                     <h2>Session Objective:</h2>
                     <p id="description"></p>
                 </div>
+                <div class="seat-selector">
+                    <button id="minusBtn" onclick="updateSeatCount(-1)">-</button>
+                    <span id="seatCount">1</span>
+                    <button id="plusBtn" onclick="updateSeatCount(1)">+</button>
+                    <span id="totalamount"></span>
+                </div>
+                <button id="BookBtn" class="book-button" onclick="BookEvent()">Book</button>
             </div>
             <div class="sidebar">
                 <div class="info">
                     <h2>Hosted by:</h2>
                     <p id="hostedby"></p>
+                </div>
+                <div class="info">
+                    <h2>Seats Left:</h2>
+                    <p id="seats"></p>
                 </div>
                 <div class="map">
                     <iframe id="address" src="" allowfullscreen="" aria-hidden="false" tabindex="0"></iframe>
@@ -134,14 +196,89 @@
     </div>
     <script>
         const eventData = JSON.parse(localStorage.getItem('event'));
+        const token = localStorage.getItem('jwtToken');
+        let seatCount = 1;
 
         document.getElementById("eventname").textContent = eventData.name;
         document.getElementById("datetime").textContent = `${eventData.date} at ${eventData.time}`;
         document.getElementById("location").textContent = eventData.city;
         document.getElementById("description").textContent = eventData.description;
-        document.getElementById("hostedby").textContent = "Train My Brain";
         document.getElementById("address").src = "https://maps.google.com/maps?q=" + eventData.address + "&t=&z=13&ie=UTF8&iwloc=&output=embed";
         document.getElementById("eventimage").src = "../" + eventData.image;
+        document.getElementById("seats").textContent = Number(eventData.max_seat) - Number(eventData.enrolled_count);
+        document.getElementById("totalamount").textContent = eventData.fees + " ₹";
+        if (Number(eventData.max_seat) - Number(eventData.enrolled_count) == 0)
+            document.getElementById("BookBtn").disabled = true
+
+        fetch(`http://192.168.1.83:8080/user?id=${eventData.creator_id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+        })
+            .then(response => {
+                if (response.status === 401) {
+                    alert("Unauthorized!!");
+                    window.location.href = 'Login.html';
+                    return;
+                } else if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                document.getElementById("hostedby").textContent = data["name"];
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert(`Event Fetch failed: ${error.message}`);
+            });
+
+        function updateSeatCount(change) {
+            const maxSeats = Number(eventData.max_seat) - Number(eventData.enrolled_count);
+            seatCount = Math.max(1, Math.min(seatCount + change, maxSeats));
+            document.getElementById("seatCount").textContent = seatCount;
+            document.getElementById("plusBtn").disabled = seatCount >= maxSeats;
+            document.getElementById("minusBtn").disabled = seatCount <= 1;
+            document.getElementById("totalamount").textContent = (eventData.fees * seatCount) + " ₹";
+
+        }
+
+        function BookEvent() {
+            const data = {
+                userid: localStorage.getItem('id'),
+                eventid: eventData.eventid,
+                seats: seatCount
+            };
+
+            fetch('http://192.168.1.83:8080/bookevent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => { throw new Error(data.message); });
+                    } else if (response.code == 401) {
+                        window.location.href = 'login.html';
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert(data.message);
+                })
+                .catch((error) => {
+                    alert(`Booking Event failed: ${error.message}`);
+                });
+        }
     </script>
 </body>
+
 </html>
