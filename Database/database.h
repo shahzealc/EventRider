@@ -11,7 +11,6 @@ namespace Database {
 
 	inline bool executeQuery(sqlite3** db, const std::string& query);
 	inline bool createTables(sqlite3** db);
-	inline crow::json::wvalue executeQuerySelect(sqlite3** db, const std::string& query);
 
 	inline bool open(sqlite3** db, std::filesystem::path dbPath) {
 		if (sqlite3_open(dbPath.string().c_str(), db) == SQLITE_OK) {
@@ -44,17 +43,33 @@ namespace Database {
 		const char* Event = "CREATE TABLE IF NOT EXISTS Event ("
 			"id INTEGER PRIMARY KEY AUTOINCREMENT,"
 			"name VARCHAR,"
-			"location VARCHAR,"
+			"address VARCHAR,"
+			"city VARCHAR,"
 			"type VARCHAR,"
 			"description VARCHAR,"
 			"fees REAL,"
+			"max_seat INTEGER,"
+			"enrolled_count INTEGER,"
 			"creator_id INTEGER,"
 			"date date,"
 			"time time,"
+			"image VARCHAR,"
 			"FOREIGN KEY(creator_id) REFERENCES User(id));";
 
 
 		if (!executeQuery(db, Event)) {
+			return false;
+		}
+
+		const char* PurchasedEvent = "CREATE TABLE IF NOT EXISTS PurchasedEvent ("
+			"id INTEGER PRIMARY KEY AUTOINCREMENT,"
+			"event_id INTEGER,"
+			"user_id INTEGER,"
+			"FOREIGN KEY(user_id) REFERENCES User(id),"
+			"FOREIGN KEY(event_id) REFERENCES Event(id));";
+
+
+		if (!executeQuery(db, PurchasedEvent)) {
 			return false;
 		}
 
@@ -80,31 +95,6 @@ namespace Database {
 		}
 		return true;
 
-	}
-
-	inline crow::json::wvalue executeQuerySelect(sqlite3** db, const std::string& query) {
-		sqlite3_stmt* stmt;
-		crow::json::wvalue jsonResponse;
-		std::vector<crow::json::wvalue> rows;
-
-		if (sqlite3_prepare_v2(*db, query.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
-			while (sqlite3_step(stmt) == SQLITE_ROW) {
-				crow::json::wvalue row;
-				row["id"] = sqlite3_column_int(stmt, 0);
-				row["username"] = (const char*)sqlite3_column_text(stmt, 1);
-				row["password"] = (const char*)sqlite3_column_text(stmt, 2);
-				row["email"] = (const char*)sqlite3_column_text(stmt, 3);
-				row["dob"] = (const char*)sqlite3_column_text(stmt, 4);
-				row["mobile"] = (const char*)sqlite3_column_text(stmt, 5);
-				row["address"] = (const char*)sqlite3_column_text(stmt, 6);
-				row["gender"] = (const char*)sqlite3_column_text(stmt, 7);
-				rows.push_back(std::move(row));
-			}
-			sqlite3_finalize(stmt);
-		}
-
-		jsonResponse = std::move(rows);
-		return jsonResponse;
 	}
 
 	inline std::string find(sqlite3** db, const std::string& tablename, const std::string& field, const std::string& fieldvalue, const std::string& getfield) {

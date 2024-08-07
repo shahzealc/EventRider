@@ -1,6 +1,5 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,36 +39,65 @@
             gap: 2em;
             width: 100%;
             max-width: 1200px;
+            /*            margin:20px;
+            padding:0px 30px 0px 30px;*/
         }
 
         .event-card {
             background: white;
-            padding: 1.5em;
+            padding: 0;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
             .event-card:hover {
                 transform: translateY(-5px);
             }
 
-            .event-card h2 {
-                margin: 0 0 0.5em;
-                color: #333;
-            }
+        .event-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
 
-            .event-card p {
-                margin: 0.5em 0;
-                color: #666;
-            }
+        .event-content {
+            padding: 1em;
+        }
 
-            .event-card .event-city,
-            .event-card .event-type,
-            .event-card .event-fees,
-            .event-card .event-date,
-            .event-card .event-time {
-                font-weight: bold;
+        .event-card h2 {
+            margin: 0 0 0.5em;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .event-card p {
+            margin: 0.5em 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .event-card .event-city,
+        .event-card .event-type,
+        .event-card .event-fees,
+        .event-card .event-date,
+        .event-card .event-time {
+            font-weight: bold;
+        }
+
+        .event-card .event-fees {
+            color: green;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+            .event-card .event-fees::before {
+                content: "💸";
+                margin-right: 5px;
             }
 
         .add-event-button {
@@ -109,10 +137,8 @@
                 .filter-container select:focus {
                     border-color: #5c6ac4;
                 }
-
     </style>
 </head>
-
 <body>
     <header>
         <h1>Upcoming Events</h1>
@@ -126,7 +152,7 @@
                 <option value="Business">Business</option>
                 <option value="Music">Music</option>
                 <option value="Parties">Parties</option>
-                <option value="Festival">Festival</option>
+                <option value="Festival">Festival</</option>
                 <option value="Art">Art</option>
                 <option value="Dance">Dance</option>
                 <option value="Health">Health</option>
@@ -138,8 +164,7 @@
                 <option value="Other">Other</option>
             </select>
         </div>
-        <div class="events-container" id="eventsContainer">
-        </div>
+        <div class="events-container" id="eventsContainer"></div>
     </main>
 
     <script>
@@ -158,8 +183,7 @@
                         alert("Unauthorized!!");
                         window.location.href = 'Login.html';
                         return;
-                    }
-                    else if (!response.ok) {
+                    } else if (!response.ok) {
                         return response.json().then(data => {
                             throw new Error(data.message);
                         });
@@ -176,7 +200,6 @@
                 });
         }
 
-
         function displayEvents(events) {
             const eventsContainer = document.getElementById('eventsContainer');
             eventsContainer.innerHTML = '';
@@ -188,45 +211,39 @@
 
         function createEventCard(event) {
             const card = document.createElement('div');
+            card.onclick = () => EventDescription(event);
             card.classList.add('event-card');
+
+            const eventImage = document.createElement('img');
+            eventImage.classList.add('event-image');
+            eventImage.src = `../${event.image}`;
+            card.appendChild(eventImage);
+
+            const eventContent = document.createElement('div');
+            eventContent.classList.add('event-content');
+            card.appendChild(eventContent);
 
             const name = document.createElement('h2');
             name.textContent = event.name;
-            card.appendChild(name);
+            eventContent.appendChild(name);
 
             const city = document.createElement('p');
             city.classList.add('event-city');
-            city.textContent = `City: ${event.location}`;
-            card.appendChild(city);
-
-            const type = document.createElement('p');
-            type.classList.add('event-type');
-            type.textContent = `Type: ${event.type}`;
-            card.appendChild(type);
-
-            const description = document.createElement('p');
-            description.classList.add('event-description');
-            description.textContent = event.description;
-            card.appendChild(description);
-
-            const fees = document.createElement('p');
-            fees.classList.add('event-fees');
-            fees.textContent = `Fees: ₹${event.fees}`;
-            card.appendChild(fees);
+            city.textContent = event.city;
+            eventContent.appendChild(city);
 
             const date = document.createElement('p');
             date.classList.add('event-date');
-            date.textContent = `Date: ${event.date}`;
-            card.appendChild(date);
+            date.textContent = event.date;
+            eventContent.appendChild(date);
 
-            const time = document.createElement('p');
-            time.classList.add('event-time');
-            time.textContent = `Time: ${event.time}`;
-            card.appendChild(time);
+            const fees = document.createElement('p');
+            fees.classList.add('event-fees');
+            fees.textContent = `₹${event.fees}`;
+            eventContent.appendChild(fees);
 
             return card;
         }
-
 
         function searchByName() {
             const searchField = document.getElementById('searchField').value;
@@ -240,10 +257,14 @@
             fetchEvents(url);
         }
 
+        function EventDescription(eventData) {
+            
+            localStorage.setItem("event", JSON.stringify(eventData));
+            window.location.href = "EventDescription.html";
+        }
+
         fetchEvents('http://192.168.1.83:8080/events');
-
     </script>
-
 </body>
-
 </html>
+

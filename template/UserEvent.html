@@ -130,6 +130,7 @@
 <body>
     <header>
         <h1>Your Events</h1>
+        <h4><a href="Events.html">Home</a></h4>
     </header>
     <main>
         <div class="events-container" id="eventsContainer">
@@ -192,18 +193,13 @@
 
             const city = document.createElement('p');
             city.classList.add('event-city');
-            city.textContent = `City: ${event.location}`;
+            city.textContent = `City: ${event.city}`;
             card.appendChild(city);
 
             const type = document.createElement('p');
             type.classList.add('event-type');
             type.textContent = `Type: ${event.type}`;
             card.appendChild(type);
-
-            const description = document.createElement('p');
-            description.classList.add('event-description');
-            description.textContent = event.description;
-            card.appendChild(description);
 
             const fees = document.createElement('p');
             fees.classList.add('event-fees');
@@ -231,7 +227,7 @@
             updateButton.classList.add('update-button');
             updateButton.onclick = () => updateEvent(event);
             card.appendChild(updateButton);
-
+            console.log(event);
             return card;
         }
 

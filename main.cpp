@@ -4,7 +4,9 @@
 #include "jwt-cpp/jwt.h"
 #include "crow_all.h"
 #include "Database/database.h"
-
+#include <fstream>
+#include <filesystem>
+#include "Base64/base64.h"
 
 struct SUserInfo {
 	std::string UserId{};
@@ -63,6 +65,17 @@ struct VerifyJWT {
 
 };
 
+bool saveFile(const std::string& fileName, const std::string& base64Content) {
+	std::ofstream file(fileName, std::ios::binary);
+	if (file.is_open()) {
+		std::string decodedData = base64_decode(base64Content);
+		file.write(decodedData.c_str(), decodedData.size());
+		file.close();
+		return true;
+	}
+	return false;
+}
+
 int main() {
 
 	crow::App<crow::CORSHandler, crow::CookieParser, VerifyJWT> app;
@@ -91,7 +104,9 @@ int main() {
 
 			crow::json::wvalue res;
 
-			if (U1.validateUser(db)) {
+			std::string message = U1.validateUser(db);
+
+			if (message=="true") {
 				auto token = jwt::create()
 					.set_issuer("auth0")
 					.set_type("JWS")
@@ -106,7 +121,7 @@ int main() {
 				return crow::response(200, res);
 			}
 			else {
-				res["message"] = "Email or Password incorrect";
+				res["message"] = message;
 				return crow::response(401, res);
 			}
 		}
@@ -144,28 +159,38 @@ int main() {
 		}
 		});
 
-	CROW_ROUTE(app, "/addevent").methods(crow::HTTPMethod::Post)([db](const crow::request& request) {
-		auto body = crow::json::load(request.body);
+	CROW_ROUTE(app, "/addevent").methods(crow::HTTPMethod::Post)([db](const crow::request& req) {
+		auto body = crow::json::load(req.body);
+		if (!body) {
+			return crow::response(400, "Invalid JSON");
+		}
 
 		Event E1;
 		E1.setName(body["name"].s());
-		E1.setLocation(body["city"].s());
+		E1.setAddress(body["address"].s());
+		E1.setCity(body["city"].s());
 		E1.setType(body["type"].s());
 		E1.setDescription(body["description"].s());
 		E1.setFees(std::stod(body["fees"].s()));
-		E1.setCreatorId(UserInfo.UserId);
+		E1.setMaxSeat(std::stoi(body["max_seat"].s()));
+		E1.setEnrolledCount(0);
 		E1.setDate(body["date"].s());
 		E1.setTime(body["time"].s());
+		E1.setCreatorId(UserInfo.UserId);
+		// Handle the image
+		std::string imageContent = body["image"].s();
+		std::string fileName = std::string("Images/").append(body["filename"].s());
 
-		crow::json::wvalue res;
+		if (!saveFile(fileName, imageContent)) {
+			return crow::response(500, "Failed to save file");
+		}
+		E1.setImage(fileName);
 
 		if (E1.insertEvent(db)) {
-			res["message"] = "Inserted Successfully";
-			return crow::response(200, res);
+			return crow::response(200, "Event added successfully");
 		}
 		else {
-			res["message"] = "Something Went Wrong";
-			return crow::response(400, res);
+			return crow::response(400, "Failed to add event");
 		}
 		});
 
@@ -175,7 +200,7 @@ int main() {
 			auto location = request.url_params.get("location");
 
 			Event E1;
-			E1.setLocation(location);
+			E1.setCity(location);
 
 			auto res = E1.GetEvents(db, "location");
 			return crow::response(200, res);
@@ -194,7 +219,6 @@ int main() {
 
 			Event E1;
 			E1.setCreatorId(creator);
-
 			auto res = E1.GetEvents(db, "creator");
 			return crow::response(200, res);
 		}
@@ -248,10 +272,12 @@ int main() {
 			Event E1;
 			E1.setId(body["eventid"].s());
 			E1.setName(body["name"].s());
-			E1.setLocation(body["city"].s());
+			E1.setAddress(body["address"].s());
+			E1.setCity(body["city"].s());
 			E1.setType(body["type"].s());
 			E1.setDescription(body["description"].s());
 			E1.setFees(std::stod(body["fees"].s()));
+			E1.setMaxSeat(std::stoi(body["max_seat"].s()));
 			E1.setDate(body["date"].s());
 			E1.setTime(body["time"].s());
 
@@ -271,7 +297,6 @@ int main() {
 			return crow::response(500, "Server error");
 		}
 		});
-
 
 	CROW_ROUTE(app, "/checktoken")([]() {
 

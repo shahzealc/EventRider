@@ -17,44 +17,51 @@
 
         .form-container {
             background: #fff;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            width: 100%;
+            max-width: 400px;
         }
 
             .form-container h2 {
                 text-align: center;
                 margin-bottom: 20px;
                 color: #333;
+                font-size: 1.5rem;
             }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
             .form-group label {
                 display: block;
                 margin-bottom: 5px;
                 color: #666;
+                font-size: 0.9rem;
             }
 
             .form-group input,
-            .form-group select {
+            .form-group select,
+            .form-group textarea {
                 width: 100%;
                 padding: 8px;
                 box-sizing: border-box;
                 border: 1px solid #ddd;
                 border-radius: 4px;
+                font-size: 0.9rem;
             }
 
                 .form-group input:focus,
-                .form-group select:focus {
+                .form-group select:focus,
+                .form-group textarea:focus {
                     border-color: #5c6ac4;
+                    outline: none;
                 }
 
             .form-group select {
-                height: 36px;
+                height: auto;
             }
 
             .form-group button {
@@ -64,8 +71,9 @@
                 border: none;
                 border-radius: 4px;
                 color: white;
-                font-size: 16px;
+                font-size: 1rem;
                 cursor: pointer;
+                margin-top: 10px;
             }
 
                 .form-group button:hover {
@@ -80,10 +88,6 @@
             <div class="form-group">
                 <label for="name">Name:</label>
                 <input type="text" id="name" name="name" required>
-            </div>
-            <div class="form-group">
-                <label for="city">Event City:</label>
-                <input type="text" id="city" name="city" required>
             </div>
 
             <div class="form-group">
@@ -107,8 +111,23 @@
             </div>
 
             <div class="form-group">
+                <label for="address">Event Address:</label>
+                <input type="text" id="address" name="address" required>
+            </div>
+
+            <div class="form-group">
+                <label for="city">Event City:</label>
+                <input type="text" id="city" name="city" required>
+            </div>
+
+            <div class="form-group">
                 <label for="fees">Fees:</label>
                 <input type="number" id="fees" name="fees" required>
+            </div>
+
+            <div class="form-group">
+                <label for="max_seat">Max Seats:</label>
+                <input type="number" id="max_seat" name="max_seat" required>
             </div>
 
             <div class="form-group">
@@ -123,8 +142,9 @@
 
             <div class="form-group">
                 <label for="description">Description:</label>
-                <input type="text" id="description" name="description" required>
+                <textarea id="description" name="description" rows="3"></textarea>
             </div>
+
             <div class="form-group">
                 <button type="submit">Update</button>
             </div>
@@ -133,12 +153,13 @@
     <script>
         const eventData = JSON.parse(localStorage.getItem('UpdateData'));
 
-
         document.getElementById("name").value = eventData.name;
-        document.getElementById("city").value = eventData.location;
+        document.getElementById("city").value = eventData.city;
+        document.getElementById("address").value = eventData.address;
         document.getElementById("type").value = eventData.type;
         document.getElementById("fees").value = eventData.fees;
-        document.getElementById("date").value = eventData.date; 
+        document.getElementById("max_seat").value = eventData.max_seat;
+        document.getElementById("date").value = eventData.date;
         document.getElementById("time").value = eventData.time;
         document.getElementById("description").value = eventData.description;
 
@@ -151,14 +172,11 @@
                 data[key] = value;
             });
 
-            console.log(eventData);
             data["eventid"] = eventData.eventid.toString();
 
             const token = localStorage.getItem('jwtToken');
 
-            console.log(data);
-
-            fetch(`http://192.168.1.83:8080/events`, {
+            fetch('http://192.168.1.83:8080/events', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -176,12 +194,12 @@
                             throw new Error(data.message);
                         });
                     }
+                    window.location.href = 'UserEvent.html';
                     return response.json();
                 })
                 .then(data => {
                     alert("Event Updated Successfully");
                     localStorage.removeItem('UpdateData');
-                    window.location.href = 'Events.html';
                 })
                 .catch((error) => {
                     console.error('Error:', error);

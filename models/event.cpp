@@ -2,17 +2,21 @@
 #include "../Database/database.h"
 
 bool Event::insertEvent(sqlite3* db) {
-	std::string query = "INSERT INTO Event (name, location, type, description, fees, creator_id, date, time) VALUES ('"
+	std::string query = "INSERT INTO Event (name, city,address, type, description, fees,max_seat,enrolled_count, creator_id, date,image, time) VALUES ('"
 		+ name + "','"
-		+ location + "','"
+		+ city + "','"
+		+ address + "','"
 		+ type + "','"
 		+ description + "',"
 		+ std::to_string(fees) + ","
+		+ std::to_string(max_seat) + ","
+		+ std::to_string(enrolled_count) + ","
 		+ creator_id + ",'"
 		+ date + "','"
+		+ image + "','"
 		+ time + "');";
 
-	CROW_LOG_INFO<<query;
+	CROW_LOG_INFO << query;
 
 	if (!Database::executeQuery(&db, query)) {
 		std::cerr << "Failed to insert user: " << Database::SQLiteError << std::endl;
@@ -21,7 +25,7 @@ bool Event::insertEvent(sqlite3* db) {
 	return true;
 }
 
-crow::json::wvalue Event::GetEventsByQuery(sqlite3* db,std::string query)
+crow::json::wvalue Event::GetEventsByQuery(sqlite3* db, std::string query)
 {
 	sqlite3_stmt* stmt;
 	crow::json::wvalue jsonResponse;
@@ -32,13 +36,17 @@ crow::json::wvalue Event::GetEventsByQuery(sqlite3* db,std::string query)
 			crow::json::wvalue row;
 			row["eventid"] = sqlite3_column_int(stmt, 0);
 			row["name"] = (const char*)sqlite3_column_text(stmt, 1);
-			row["location"] = (const char*)sqlite3_column_text(stmt, 2);
-			row["type"] = (const char*)sqlite3_column_text(stmt, 3);
-			row["description"] = (const char*)sqlite3_column_text(stmt, 4);
-			row["fees"] = (const char*)sqlite3_column_text(stmt, 5);
-			row["creator_id"] = (const char*)sqlite3_column_text(stmt, 6);
-			row["date"] = (const char*)sqlite3_column_text(stmt, 7);
-			row["time"] = (const char*)sqlite3_column_text(stmt, 8);
+			row["address"] = (const char*)sqlite3_column_text(stmt, 2);
+			row["city"] = (const char*)sqlite3_column_text(stmt, 3);
+			row["type"] = (const char*)sqlite3_column_text(stmt, 4);
+			row["description"] = (const char*)sqlite3_column_text(stmt, 5);
+			row["fees"] = (const char*)sqlite3_column_text(stmt, 6);
+			row["max_seat"] = (const char*)sqlite3_column_text(stmt, 7);
+			row["enrolled_count"] = (const char*)sqlite3_column_text(stmt, 8);
+			row["creator_id"] = (const char*)sqlite3_column_text(stmt, 9);
+			row["date"] = (const char*)sqlite3_column_text(stmt, 10);
+			row["time"] = (const char*)sqlite3_column_text(stmt, 11);
+			row["image"] = (const char*)sqlite3_column_text(stmt, 12);
 			rows.push_back(std::move(row));
 		}
 		sqlite3_finalize(stmt);
@@ -50,8 +58,8 @@ crow::json::wvalue Event::GetEventsByQuery(sqlite3* db,std::string query)
 
 crow::json::wvalue Event::GetEvents(sqlite3* db, std::string field)
 {
-	if (field == "location") {
-		std::string query = "SELECT * FROM Event WHERE LOWER(location) like LOWER('%" + location + "%') AND date >= date('now') order by date, time;";
+	if (field == "city") {
+		std::string query = "SELECT * FROM Event WHERE LOWER(city) like LOWER('%" + city + "%') AND date >= date('now') order by date, time;";
 		return GetEventsByQuery(db, query);
 	}
 	else if (field == "type") {
@@ -64,16 +72,17 @@ crow::json::wvalue Event::GetEvents(sqlite3* db, std::string field)
 	}
 	else if (field == "creator") {
 		std::string query = "SELECT * FROM Event WHERE LOWER(creator_id) like LOWER('%" + creator_id + "%') AND date >= date('now') order by date, time;";
+		CROW_LOG_INFO<<query;
 		return GetEventsByQuery(db, query);
 	}
 	else if (field == "search") {
-		std::string query = "SELECT * FROM Event WHERE (LOWER(location) like LOWER('%" + name + "%') or LOWER(type) like LOWER('%" + name + "%') or LOWER(name) like LOWER('%" + name + "%') or LOWER(description) like LOWER('%" + name + "%')) AND date >= date('now') order by date, time;";
-		CROW_LOG_INFO<<query;
+		std::string query = "SELECT * FROM Event WHERE (LOWER(city) like LOWER('%" + name + "%') or LOWER(type) like LOWER('%" + name + "%') or LOWER(name) like LOWER('%" + name + "%') or LOWER(description) like LOWER('%" + name + "%')) AND date >= date('now') order by date, time;";
+		CROW_LOG_INFO << query;
 		return GetEventsByQuery(db, query);
 	}
 	else {
 		std::string query = "SELECT * FROM Event WHERE date >= date('now') ORDER BY date, time;";
-		CROW_LOG_INFO<<query;
+		CROW_LOG_INFO << query;
 		return GetEventsByQuery(db, query);
 	}
 	return crow::json::wvalue();
@@ -93,14 +102,16 @@ bool Event::UpdateEvent(sqlite3* db)
 {
 	std::string query = "UPDATE Event SET "
 		"name = '" + name + "', "
-		"location = '" + location + "', "
+		"address = '" + address + "', "
+		"city = '" + city + "', "
 		"type = '" + type + "', "
 		"fees = " + std::to_string(fees) + ", "
+		"max_seat = " + std::to_string(max_seat) + ", "
 		"date = '" + date + "', "
 		"time = '" + time + "', "
 		"description = '" + description + "' "
 		"WHERE id = " + id + ";";
-	CROW_LOG_WARNING<<query;
+	CROW_LOG_WARNING << query;
 
 	if (!Database::executeQuery(&db, query)) {
 		CROW_LOG_WARNING << "Failed to Update user: " << Database::SQLiteError;

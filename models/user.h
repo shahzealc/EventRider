@@ -37,7 +37,7 @@ public:
 
 	bool insertUser(sqlite3* db);
 
-	bool validateUser(sqlite3* db);
+	std::string validateUser(sqlite3* db);
 
 };
 

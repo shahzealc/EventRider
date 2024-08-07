@@ -36,6 +36,12 @@
     <ClCompile Include="Bcrypt\blowfish.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Base64\base64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="models\purchasedevent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crow_all.h">
@@ -65,6 +71,12 @@
     <ClInclude Include="Bcrypt\openbsd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Base64\base64.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="models\purchasedevent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="template\AddEvent.html" />
@@ -73,5 +85,6 @@
     <None Include="template\Events.html" />
     <None Include="template\UserEvent.html" />
     <None Include="template\UpdateEvent.html" />
+    <None Include="template\EventDescription.html" />
   </ItemGroup>
 </Project>
