@@ -267,6 +267,15 @@ int main() {
 			auto res = E1.GetEvents(db, "search");
 			return crow::response(200, res);
 		}
+		else if (request.url_params.get("eventid") != nullptr) {
+			auto id = request.url_params.get("eventid");
+
+			Event E1;
+			E1.setId(id);
+
+			auto res = E1.GetEvents(db, "id");
+			return crow::response(200, res);
+		}
 		else {
 			Event E1;
 			auto res = E1.GetEvents(db);

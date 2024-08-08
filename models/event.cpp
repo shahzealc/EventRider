@@ -1,27 +1,40 @@
 #include "event.h"
 #include "../Database/database.h"
 
+#include <sqlite3.h>
+#include <iostream>
+#include <string>
+
 bool Event::insertEvent(sqlite3* db) {
-	std::string query = "INSERT INTO Event (name, city,address, type, description, fees,max_seat,enrolled_count, creator_id, date,image, time) VALUES ('"
-		+ name + "','"
-		+ city + "','"
-		+ address + "','"
-		+ type + "','"
-		+ description + "',"
-		+ std::to_string(fees) + ","
-		+ std::to_string(max_seat) + ","
-		+ std::to_string(enrolled_count) + ","
-		+ creator_id + ",'"
-		+ date + "','"
-		+ image + "','"
-		+ time + "');";
+	std::string query = "INSERT INTO Event (name, city, address, type, description, fees, max_seat, enrolled_count, creator_id, date, image, time) "
+		"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-	CROW_LOG_INFO << query;
-
-	if (!Database::executeQuery(&db, query)) {
-		std::cerr << "Failed to insert user: " << Database::SQLiteError << std::endl;
+	sqlite3_stmt* stmt;
+	if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
+
+	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 2, city.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 3, address.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 4, type.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 5, description.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt, 6, fees);
+	sqlite3_bind_int(stmt, 7, max_seat);
+	sqlite3_bind_int(stmt, 8, enrolled_count);
+	sqlite3_bind_text(stmt, 9, creator_id.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 10, date.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 11, image.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 12, time.c_str(), -1, SQLITE_TRANSIENT);
+
+	if (sqlite3_step(stmt) != SQLITE_DONE) {
+		std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	sqlite3_finalize(stmt);
 	return true;
 }
 
@@ -80,6 +93,11 @@ crow::json::wvalue Event::GetEvents(sqlite3* db, std::string field)
 		CROW_LOG_INFO << query;
 		return GetEventsByQuery(db, query);
 	}
+	else if (field == "id") {
+		std::string query = "SELECT * FROM Event WHERE id = " + id + ";";
+		CROW_LOG_INFO << query;
+		return GetEventsByQuery(db, query);
+	}
 	else {
 		std::string query = "SELECT * FROM Event WHERE date >= date('now') ORDER BY date, time;";
 		CROW_LOG_INFO << query;
@@ -98,25 +116,43 @@ bool Event::DeleteEvent(sqlite3* db) {
 	return true;
 }
 
-bool Event::UpdateEvent(sqlite3* db)
-{
+bool Event::UpdateEvent(sqlite3* db) {
 	std::string query = "UPDATE Event SET "
-		"name = '" + name + "', "
-		"address = '" + address + "', "
-		"city = '" + city + "', "
-		"type = '" + type + "', "
-		"fees = " + std::to_string(fees) + ", "
-		"max_seat = " + std::to_string(max_seat) + ", "
-		"date = '" + date + "', "
-		"time = '" + time + "', "
-		"description = '" + description + "' "
-		"WHERE id = " + id + ";";
-	CROW_LOG_WARNING << query;
+		"name = ?, "
+		"address = ?, "
+		"city = ?, "
+		"type = ?, "
+		"fees = ?, "
+		"max_seat = ?, "
+		"date = ?, "
+		"time = ?, "
+		"description = ? "
+		"WHERE id = ?";
 
-	if (!Database::executeQuery(&db, query)) {
-		CROW_LOG_WARNING << "Failed to Update event: " << Database::SQLiteError;
+	sqlite3_stmt* stmt;
+	if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
 		return false;
 	}
+
+	sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 2, address.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 3, city.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 4, type.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_int(stmt, 5, fees);
+	sqlite3_bind_int(stmt, 6, max_seat);
+	sqlite3_bind_text(stmt, 7, date.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 8, time.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 9, description.c_str(), -1, SQLITE_TRANSIENT);
+	sqlite3_bind_text(stmt, 10, id.c_str(), -1, SQLITE_TRANSIENT);
+
+	if (sqlite3_step(stmt) != SQLITE_DONE) {
+		std::cerr << "Failed to execute statement: " << sqlite3_errmsg(db) << std::endl;
+		sqlite3_finalize(stmt);
+		return false;
+	}
+
+	sqlite3_finalize(stmt);
 	return true;
 }
 

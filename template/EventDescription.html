@@ -38,17 +38,36 @@
 
         .content {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             margin-top: 20px;
             gap: 20px;
         }
 
+        @media (min-width: 768px) {
+            .content {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+
         .main-content {
-            width: 65%;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .main-content {
+                width: 65%;
+            }
         }
 
         .sidebar {
-            width: 30%;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .sidebar {
+                width: 30%;
+            }
         }
 
         .event-details {
@@ -73,7 +92,6 @@
         }
 
         .sidebar .info {
-            background: #f1f1f1;
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 8px;
@@ -127,6 +145,11 @@
                 background-color: #6c757d;
                 cursor: not-allowed;
             }
+
+        #minusBtn:disabled, #plusBtn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
 
         .seat-selector {
             display: flex;
@@ -188,29 +211,23 @@
                     <h2>Seats Left:</h2>
                     <p id="seats"></p>
                 </div>
-                <div class="map">
-                    <iframe id="address" src="" allowfullscreen="" aria-hidden="false" tabindex="0"></iframe>
+                <div class="info">
+                    <h2>Location:</h2>
+                    <div class="map">
+                        <iframe id="address" src="" allowfullscreen="" aria-hidden="false" tabindex="0"></iframe>
+                    </div><br />
+                    <p id="address_text"></p>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        const eventData = JSON.parse(localStorage.getItem('event'));
+        const eventid = JSON.parse(localStorage.getItem('eventid'));
+        var eventData = {};
         const token = localStorage.getItem('jwtToken');
         let seatCount = 1;
 
-        document.getElementById("eventname").textContent = eventData.name;
-        document.getElementById("datetime").textContent = `${eventData.date} at ${eventData.time}`;
-        document.getElementById("location").textContent = eventData.city;
-        document.getElementById("description").textContent = eventData.description;
-        document.getElementById("address").src = "https://maps.google.com/maps?q=" + eventData.address + "&t=&z=13&ie=UTF8&iwloc=&output=embed";
-        document.getElementById("eventimage").src = "../" + eventData.image;
-        document.getElementById("seats").textContent = Number(eventData.max_seat) - Number(eventData.enrolled_count);
-        document.getElementById("totalamount").textContent = eventData.fees + " ₹";
-        if (Number(eventData.max_seat) - Number(eventData.enrolled_count) == 0)
-            document.getElementById("BookBtn").disabled = true
-
-        fetch(`http://192.168.1.83:8080/user?id=${eventData.creator_id}`, {
+        fetch(`http://192.168.1.83:8080/events?eventid=${eventid}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -230,13 +247,63 @@
                 return response.json();
             })
             .then(data => {
-                console.log('Success:', data);
-                document.getElementById("hostedby").textContent = data["name"];
+                console.log('Success:', data[0]);
+                eventData = data[0];
+                document.getElementById("eventname").textContent = eventData.name;
+                document.getElementById("datetime").textContent = `${eventData.date} at ${eventData.time}`;
+                document.getElementById("location").textContent = eventData.city;
+                document.getElementById("address_text").textContent = eventData.address;
+                document.getElementById("description").innerHTML = eventData.description.replace(/\n/g, '<br>');
+                document.getElementById("address").src = "https://maps.google.com/maps?q=" + eventData.address + "&t=&z=13&ie=UTF8&iwloc=&output=embed";
+                document.getElementById("eventimage").src = "../" + eventData.image;
+                document.getElementById("seats").textContent = Number(eventData.max_seat) - Number(eventData.enrolled_count);
+                document.getElementById("totalamount").textContent = eventData.fees + " ₹";
+                if (Number(eventData.max_seat) - Number(eventData.enrolled_count) == 0) {
+                    document.getElementById("BookBtn").disabled = true
+                    document.getElementById("plusBtn").disabled = true;
+                    document.getElementById("minusBtn").disabled = true;
+                    document.getElementById("BookBtn").textContent = "Fully Booked";
+                    document.getElementById("seats").textContent = "Full";
+                }
+                HostedBy();
             })
             .catch((error) => {
                 console.error('Error:', error);
                 alert(`Event Fetch failed: ${error.message}`);
             });
+
+
+        function HostedBy() {
+
+            fetch(`http://192.168.1.83:8080/user?id=${eventData.creator_id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            })
+                .then(response => {
+                    if (response.status === 401) {
+                        alert("Unauthorized!!");
+                        window.location.href = 'Login.html';
+                        return;
+                    } else if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    document.getElementById("hostedby").textContent = data["name"];
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert(`Event Fetch failed: ${error.message}`);
+                });
+
+        }
 
         function updateSeatCount(change) {
             const maxSeats = Number(eventData.max_seat) - Number(eventData.enrolled_count);
@@ -245,7 +312,6 @@
             document.getElementById("plusBtn").disabled = seatCount >= maxSeats;
             document.getElementById("minusBtn").disabled = seatCount <= 1;
             document.getElementById("totalamount").textContent = (eventData.fees * seatCount) + " ₹";
-
         }
 
         function BookEvent() {
@@ -278,6 +344,7 @@
                     alert(`Booking Event failed: ${error.message}`);
                 });
         }
+
     </script>
 </body>
 
