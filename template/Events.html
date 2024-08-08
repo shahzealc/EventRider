@@ -5,6 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Events</title>
     <style>
+        .navbar {
+            background-color: #5a67d8;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+            .navbar a {
+                color: white;
+                text-decoration: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+            }
+
+                .navbar a:hover {
+                    background-color: #4c51bf;
+                }
+
+            .navbar .nav-links {
+                display: flex;
+                gap: 15px;
+            }
+
+            .navbar .logout {
+                background-color: #e53e3e;
+                padding: 8px 15px;
+            }
+
+                .navbar .logout:hover {
+                    background-color: #c53030;
+                }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+            }
+
+                .navbar .nav-links {
+                    flex-direction: column;
+                    width: 100%;
+                }
+
+                    .navbar .nav-links a, .navbar .logout {
+                        text-align: center;
+                        width: 100%;
+                        padding: 10px;
+                    }
+        }
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f9;
@@ -141,8 +193,17 @@
 </head>
 <body>
     <header>
-        <h1>Upcoming Events</h1>
-        <h4><a href="UserEvent.html">Your Events</a></h4>
+        <div class="navbar">
+            <div class="nav-title">
+                <h2>EventRiders</h2>
+            </div>
+            <div class="nav-links">
+                <a href="">Home</a>
+                <a href="UserEvent.html">Your Events</a>
+                <a href="Userbookings.html">Your Bookings</a>
+            </div>
+            <a class="logout" onclick="LogOut()">Logout</a>
+        </div>
     </header>
     <main>
         <div class="filter-container">
@@ -264,6 +325,14 @@
         }
 
         fetchEvents('http://192.168.1.83:8080/events');
+
+        function LogOut() {
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('id');
+            alert("Logged Out Successfully");
+            window.location.href = "Login.html";
+        }
+
     </script>
 </body>
 </html>

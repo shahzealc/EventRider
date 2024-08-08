@@ -385,6 +385,15 @@ int main() {
 
 		});
 
+	CROW_ROUTE(app, "/bookings").methods(crow::HTTPMethod::Get)([db](const crow::request& request) {
+
+		PurchasedEvent pe1;
+		pe1.setUserId(UserInfo.UserId);
+
+		return pe1.GetBookings(db);
+
+		});
+
 	CROW_ROUTE(app, "/checktoken")([]() {
 
 		return UserInfo.UserId + " authenticated";

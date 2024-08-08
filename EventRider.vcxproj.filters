@@ -86,5 +86,6 @@
     <None Include="template\UserEvent.html" />
     <None Include="template\UpdateEvent.html" />
     <None Include="template\EventDescription.html" />
+    <None Include="template\UserBookings.html" />
   </ItemGroup>
 </Project>

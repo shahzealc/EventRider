@@ -161,6 +161,7 @@
     <None Include="template\Register.html" />
     <None Include="template\Events.html" />
     <None Include="template\UpdateEvent.html" />
+    <None Include="template\UserBookings.html" />
     <None Include="template\UserEvent.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

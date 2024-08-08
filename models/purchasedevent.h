@@ -32,6 +32,7 @@ public:
 	bool UpdatePurchasedEvent(sqlite3* db);
 	bool checkUserWithEvent(sqlite3* db);
 	bool AddPurchasedEvent(sqlite3* db);
+	crow::json::wvalue GetBookings(sqlite3* db);
 };
 
 #endif

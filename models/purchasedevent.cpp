@@ -86,7 +86,7 @@ bool PurchasedEvent::checkUserWithEvent(sqlite3* db) {
 	bool exists = (step == SQLITE_ROW);
 	if (exists) {
 		id = (const char*)sqlite3_column_text(stmt, 0);
-		CROW_LOG_WARNING<<id;
+		CROW_LOG_WARNING << id;
 		seats += sqlite3_column_int(stmt, 3);
 	}
 	sqlite3_finalize(stmt);
@@ -100,4 +100,39 @@ bool PurchasedEvent::AddPurchasedEvent(sqlite3* db) {
 	else {
 		return insertPurchasedEvent(db);
 	}
+}
+
+crow::json::wvalue PurchasedEvent::GetBookings(sqlite3* db)
+{
+	crow::json::wvalue result;
+
+	std::string query = "SELECT Event.id, Event.name, Event.date, Event.time, Event.fees, Event.city, PurchasedEvent.event_id, PurchasedEvent.seats "
+		"FROM Event "
+		"INNER JOIN PurchasedEvent ON Event.id = PurchasedEvent.event_id "
+		"WHERE PurchasedEvent.user_id = " + user_id + ";";
+
+	sqlite3_stmt* stmt;
+	if (sqlite3_prepare_v2(db, query.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+		std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(db) << std::endl;
+		return result;
+	}
+
+	std::vector<crow::json::wvalue> bookings;
+
+	while (sqlite3_step(stmt) == SQLITE_ROW) {
+		crow::json::wvalue booking;
+		booking["event_id"] = sqlite3_column_int(stmt, 0);
+		booking["eventName"] = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)));
+		booking["date"] = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)));
+		booking["time"] = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
+		booking["fees"] = sqlite3_column_double(stmt, 4);
+		booking["location"] = std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5)));
+		booking["seats"] = sqlite3_column_int(stmt, 7);
+
+		bookings.push_back(booking);
+	}
+
+	sqlite3_finalize(stmt);
+
+	return bookings;
 }
