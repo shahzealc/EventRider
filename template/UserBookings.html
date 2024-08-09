@@ -5,112 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Bookings</title>
-    <style>
-        .navbar {
-            background-color: #5a67d8;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
-
-            .navbar a {
-                color: white;
-                text-decoration: none;
-                padding: 8px 15px;
-                border-radius: 5px;
-                transition: background-color 0.3s;
-            }
-
-                .navbar a:hover {
-                    background-color: #4c51bf;
-                }
-
-            .navbar .nav-links {
-                display: flex;
-                gap: 15px;
-            }
-
-            .navbar .logout {
-                background-color: #e53e3e;
-                padding: 8px 15px;
-            }
-
-                .navbar .logout:hover {
-                    background-color: #c53030;
-                }
-
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-            }
-
-                .navbar .nav-links {
-                    flex-direction: column;
-                    width: 100%;
-                }
-
-                    .navbar .nav-links a, .navbar .logout {
-                        text-align: center;
-                        width: 100%;
-                        padding: 10px;
-                    }
-        }
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f8f9fa;
-            color: #343a40;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-            .header h1 {
-                font-size: 32px;
-                color: #007bff;
-            }
-
-        .bookings-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-            .bookings-table th, .bookings-table td {
-                border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-            }
-
-            .bookings-table th {
-                background-color: #007bff;
-                color: white;
-            }
-
-            .bookings-table tr:nth-child(even) {
-                background-color: #f2f2f2;
-            }
-
-            .bookings-table tr:hover {
-                background-color: #ddd;
-            }
-    </style>
+    <link rel="stylesheet" href="css/UserBookings.css">
 </head>
 
 <body>
@@ -140,10 +35,10 @@
                     <th>Location</th>
                     <th>Seats</th>
                     <th>Amount Paid</th>
+                    <th>Description</th>
                 </tr>
             </thead>
             <tbody id="bookingsBody">
-                <!-- Booking rows will be inserted here by JavaScript -->
             </tbody>
         </table>
     </div>
@@ -177,12 +72,13 @@
                 data.forEach(booking => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td><a onclick="EventDescription(${booking.event_id})" >${booking.eventName}</a></td>
+                        <td>${booking.eventName}</td>
                         <td>${booking.date}</td>
                         <td>${booking.time}</td>
                         <td>${booking.location}</td>
                         <td>${booking.seats}</td>
                         <td>${booking.seats * booking.fees} ₹</td>
+                        <td><button id="detailbtn" onclick = "EventDescription(${booking.event_id})">Details</button></td>
                     `;
                     bookingsBody.appendChild(row);
                 });
@@ -195,6 +91,13 @@
         function EventDescription(id) {
             localStorage.setItem("eventid", id);
             window.location.href = "EventDescription.html"
+        }
+
+        function LogOut() {
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('id');
+            alert("Logged Out Successfully");
+            window.location.href = "Login.html";
         }
 
     </script>

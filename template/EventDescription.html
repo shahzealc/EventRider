@@ -5,219 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Details</title>
-    <style>
-        .navbar {
-            background-color: #5a67d8;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
+    <link rel="stylesheet" href="css/EventDescription.css">
 
-            .navbar a {
-                color: white;
-                text-decoration: none;
-                padding: 8px 15px;
-                border-radius: 5px;
-                transition: background-color 0.3s;
-            }
-
-                .navbar a:hover {
-                    background-color: #4c51bf;
-                }
-
-            .navbar .nav-links {
-                display: flex;
-                gap: 15px;
-            }
-
-            .navbar .logout {
-                background-color: #e53e3e;
-                padding: 8px 15px;
-            }
-
-                .navbar .logout:hover {
-                    background-color: #c53030;
-                }
-
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-            }
-
-                .navbar .nav-links {
-                    flex-direction: column;
-                    width: 100%;
-                }
-
-                    .navbar .nav-links a, .navbar .logout {
-                        text-align: center;
-                        width: 100%;
-                        padding: 10px;
-                    }
-        }
-        :root {
-            --primary-color: #3498db;
-            --secondary-color: #2ecc71;
-            --text-color: #34495e;
-            --background-color: #ecf0f1;
-            --card-background: #ffffff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: var(--card-background);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-        }
-
-        .header img {
-            width: 100%;
-            /*max-height: 300px;*/
-            object-fit: contain;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-        }
-
-        .content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-        }
-
-        .main-content, .sidebar {
-            background-color: var(--card-background);
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-        }
-
-        h1, h2 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-        }
-
-        h2 {
-            font-size: 1.8rem;
-            font-weight: 600;
-        }
-
-        p {
-            margin-bottom: 1rem;
-        }
-
-        .event-details strong {
-            color: var(--secondary-color);
-        }
-
-        .seat-selector {
-            display: flex;
-            align-items: center;
-            margin: 2rem 0;
-        }
-
-            .seat-selector button {
-                background-color: var(--primary-color);
-                color: white;
-                border: none;
-                padding: 0.5rem 1rem;
-                font-size: 1.2rem;
-                cursor: pointer;
-                transition: background-color 0.3s ease;
-            }
-
-                .seat-selector button:hover {
-                    background-color: #2980b9;
-                }
-
-                .seat-selector button:disabled {
-                    background-color: #bdc3c7;
-                    cursor: not-allowed;
-                }
-
-        #seatCount {
-            font-size: 1.2rem;
-            margin: 0 1rem;
-        }
-
-        .book-button {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            width: 100%;
-            border-radius: 8px;
-        }
-
-            .book-button:hover {
-                background-color: #27ae60;
-            }
-
-            .book-button:disabled {
-                background-color: #bdc3c7;
-                cursor: not-allowed;
-            }
-
-        .sidebar .info {
-            margin-bottom: 2rem;
-        }
-
-        .map {
-            width: 100%;
-            height: 200px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-            .map iframe {
-                width: 100%;
-                height: 100%;
-                border: none;
-            }
-
-        @media (max-width: 768px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 1rem;
-            }
-
-            .main-content, .sidebar {
-                padding: 1rem;
-            }
-        }
-    </style>
 </head>
 
 <body>
     <header>
         <div class="navbar">
             <div class="nav-title">
-                <h2>EventRiders</h2>
+                <h2 style="color:white">EventRiders</h2>
             </div>
             <div class="nav-links">
                 <a href="Events.html">Home</a>
@@ -249,6 +45,7 @@
                     <span id="totalamount" style="padding-left:10px"></span>
                 </div>
                 <button id="BookBtn" class="book-button" onclick="BookEvent()">Book</button>
+                <button id="UpdateBtn" class="Update-button" onclick="UpdateEvent()" hidden>Update</button>
             </div>
             <div class="sidebar">
                 <div class="info">
@@ -270,56 +67,64 @@
         </div>
     </div>
     <script>
+
         const eventid = JSON.parse(localStorage.getItem('eventid'));
-        var eventData = {};
         const token = localStorage.getItem('jwtToken');
+        const userid = localStorage.getItem('id');
+        var eventData = {};
         let seatCount = 1;
 
-        fetch(`http://192.168.1.83:8080/events?eventid=${eventid}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-        })
-            .then(response => {
-                if (response.status === 401) {
-                    alert("Unauthorized!!");
-                    window.location.href = 'Login.html';
-                    return;
-                } else if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.message);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data[0]);
-                eventData = data[0];
-                document.getElementById("eventname").textContent = eventData.name;
-                document.getElementById("datetime").textContent = `${eventData.date} at ${eventData.time}`;
-                document.getElementById("location").textContent = eventData.city;
-                document.getElementById("address_text").textContent = eventData.address;
-                document.getElementById("description").innerHTML = eventData.description.replace(/\n/g, '<br>');
-                document.getElementById("address").src = "https://maps.google.com/maps?q=" + eventData.address + "&t=&z=13&ie=UTF8&iwloc=&output=embed";
-                document.getElementById("eventimage").src = "../" + eventData.image;
-                document.getElementById("seats").textContent = Number(eventData.max_seat) - Number(eventData.enrolled_count);
-                document.getElementById("totalamount").textContent = eventData.fees + " ₹";
-                if (Number(eventData.max_seat) - Number(eventData.enrolled_count) == 0) {
-                    document.getElementById("BookBtn").disabled = true
-                    document.getElementById("plusBtn").disabled = true;
-                    document.getElementById("minusBtn").disabled = true;
-                    document.getElementById("BookBtn").textContent = "Fully Booked";
-                    document.getElementById("seats").textContent = "Full";
-                }
-                HostedBy();
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-                alert(`Event Fetch failed: ${error.message}`);
-            });
+        GetEventDescription();
 
+        function GetEventDescription() {
+            fetch(`http://192.168.1.83:8080/events?eventid=${eventid}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            })
+                .then(response => {
+                    if (response.status === 401) {
+                        alert("Unauthorized!!");
+                        window.location.href = 'Login.html';
+                        return;
+                    } else if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data[0]);
+                    eventData = data[0];
+                    document.getElementById("eventname").textContent = eventData.name;
+                    document.getElementById("datetime").textContent = `${eventData.date} at ${eventData.time}`;
+                    document.getElementById("location").textContent = eventData.city;
+                    document.getElementById("address_text").textContent = eventData.address;
+                    document.getElementById("description").innerHTML = eventData.description.replace(/\n/g, '<br>');
+                    document.getElementById("address").src = "https://maps.google.com/maps?q=" + eventData.address + "&t=&z=13&ie=UTF8&iwloc=&output=embed";
+                    document.getElementById("eventimage").src = "../" + eventData.image;
+                    document.getElementById("seats").textContent = Number(eventData.max_seat) - Number(eventData.enrolled_count);
+                    document.getElementById("totalamount").textContent = eventData.fees + " ₹";
+                    if (Number(eventData.max_seat) - Number(eventData.enrolled_count) == 0) {
+                        document.getElementById("BookBtn").disabled = true
+                        document.getElementById("plusBtn").disabled = true;
+                        document.getElementById("minusBtn").disabled = true;
+                        document.getElementById("BookBtn").textContent = "Fully Booked";
+                        document.getElementById("seats").textContent = "Full";
+                    }
+                    if (userid == eventData.creator_id) {
+                        document.getElementById("UpdateBtn").hidden = false;
+                    }
+                    HostedBy();
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                    alert(`Event Fetch failed: ${error.message}`);
+                });
+        }
 
         function HostedBy() {
 
@@ -391,6 +196,18 @@
                 .catch((error) => {
                     alert(`Booking Event failed: ${error.message}`);
                 });
+        }
+
+        function UpdateEvent() {
+            localStorage.setItem('UpdateData', JSON.stringify(eventData));
+            window.location.href = `UpdateEvent.html`;
+        }
+
+        function LogOut() {
+            localStorage.removeItem('jwtToken');
+            localStorage.removeItem('id');
+            alert("Logged Out Successfully");
+            window.location.href = "Login.html";
         }
 
     </script>

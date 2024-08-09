@@ -156,6 +156,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="template\AddEvent.html" />
+    <None Include="template\css\AddEvent.css" />
+    <None Include="template\css\EventDescription.css" />
+    <None Include="template\css\Events.css" />
+    <None Include="template\css\Login.css" />
+    <None Include="template\css\Register.css" />
+    <None Include="template\css\UpdateEvent.css" />
+    <None Include="template\css\UserBookings.css" />
+    <None Include="template\css\UserEvent.css" />
     <None Include="template\EventDescription.html" />
     <None Include="template\Login.html" />
     <None Include="template\Register.html" />
